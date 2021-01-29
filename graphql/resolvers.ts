@@ -4,8 +4,7 @@ import Room, { IRoom } from 'data/room';
 import BlackCard from 'data/blackCard';
 import Card from 'data/card';
 import Player from 'data/player';
-
-// import { sendMessage } from '../services/signalR';
+import { sendMessage } from 'services/socket';
 
 const shuffle = (array: Array<any>) => array.sort(() => Math.random() - 0.5);
 
@@ -93,11 +92,7 @@ const resolvers: Resolvers = {
 
       await room.save();
 
-      // await sendMessage({
-      //   connectionId: roomId,
-      //   target: `newPlayer_${roomId}`,
-      //   data: { name },
-      // });
+      await sendMessage(`newPlayer_${roomId}`, { name });
 
       return createdPlayer as PlayerType;
     },
@@ -118,11 +113,7 @@ const resolvers: Resolvers = {
       room.game.blackCards = blackCards;
       room.game.status = 'Playing';
 
-      // await sendMessage({
-      //   connectionId: roomId,
-      //   target: `startGame_${roomId}`,
-      //   data: {},
-      // });
+      await sendMessage(`startGame_${roomId}`, {});
 
       return (await updateRoom(room)) as RoomType;
     },
@@ -154,11 +145,7 @@ const resolvers: Resolvers = {
       room.game.activeBlackCard = blackCards.splice(0, 1)[0];
       room.game.blackCards = blackCards;
 
-      // await sendMessage({
-      //   connectionId: roomId,
-      //   target: `nextRound_${roomId}`,
-      //   data: {},
-      // });
+      await sendMessage(`nextRound_${roomId}`, {});
 
       return (await updateRoom(room)) as RoomType;
     },
@@ -182,11 +169,9 @@ const resolvers: Resolvers = {
 
       await updateRoom(room);
 
-      // await sendMessage({
-      //   connectionId: roomId,
-      //   target: `updateSelectedCards_${roomId}`,
-      //   data: { playerId: player._id },
-      // });
+      await sendMessage(`updateSelectedCards_${roomId}`, {
+        playerId: player._id,
+      });
 
       return player;
     },
@@ -196,17 +181,13 @@ const resolvers: Resolvers = {
 
       player.blackCards.push(room.game.activeBlackCard);
 
-      // await sendMessage({
-      //   connectionId: roomId,
-      //   target: `winner_${roomId}`,
-      //   data: {
-      //     player: {
-      //       _id: player._id,
-      //       name: player.name,
-      //       blackCards: player.blackCards,
-      //     },
-      //   },
-      // });
+      await sendMessage(`winner_${roomId}`, {
+        player: {
+          _id: player._id,
+          name: player.name,
+          blackCards: player.blackCards,
+        },
+      });
 
       return (await updateRoom(room)) as RoomType;
     },
