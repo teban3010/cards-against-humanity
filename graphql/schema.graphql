@@ -1,0 +1,68 @@
+type Card {
+  _id: ID!
+  description: String!
+  language: String!
+  deck: String!
+}
+
+type BlackCard {
+  _id: ID!
+  description: String!
+  cardsToDraw: Int!
+  language: String!
+  deck: String!
+}
+
+type Player {
+  _id: ID!
+  name: String!
+  cardCzar: Boolean!
+  selectedCards: [Card!]
+  cards: [Card!]
+  blackCards: [BlackCard!]
+}
+
+type Game {
+  mode: String!
+  status: String!
+  activeBlackCard: BlackCard
+  cards: [Card!]
+  blackCards: [BlackCard!]
+}
+
+type Room {
+  _id: ID!
+  name: String!
+  callLink: String
+  game: Game!
+  players: [Player!]!
+}
+
+input RoomData {
+  name: String!
+  callLink: String
+  mode: String!
+}
+
+type RootQuery {
+  player(id: ID!): Player!
+  room(id: ID!): Room!
+}
+
+type RootMutation {
+  createRoom(roomData: RoomData): Room!
+  createPlayer(roomId: ID, name: String): Player!
+  startGame(roomId: ID!): Room!
+  nextRound(roomId: ID!): Room!
+  updateSelectedCards(
+    roomId: ID!
+    playerId: ID!
+    selected: [ID!]!
+  ): Player!
+  updateWinner(roomId: ID!, playerId: ID!): Room!
+}
+
+schema {
+  query: RootQuery
+  mutation: RootMutation
+}

@@ -1,0 +1,21 @@
+overwrite: true
+hooks:
+  afterAllFileWrite:
+    - prettier --write
+schema:
+  - ./graphql/schema.graphql
+generates:
+  ./graphql/types.tsx:
+    plugins:
+      - typescript
+      - typescript-resolvers
+      - typescript-operations
+      - typescript-react-apollo
+    config:
+      withHooks: true # We will be using React Hooks so we disable React Components
+      withHOC: false
+      withComponent: false
+      skipTypename: true
+      # We need to override the Apollo imports since the generator uses older @apollo/react-hooks package
+      apolloReactCommonImportFrom: '@apollo/client'
+      apolloReactHooksImportFrom: '@apollo/client'
