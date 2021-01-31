@@ -1,57 +1,86 @@
-import React from 'react';
-import styles from '../styles/Home.module.css';
+import {
+  Avatar,
+  Button,
+  CircularProgress,
+  Container,
+  Heading,
+  Input,
+  Text,
+} from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
+import { gql, useMutation } from '@apollo/client';
 
-export default function Home() {
-  return (
-    <div className={styles.container}>
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+import { useRouter } from 'next/router';
+import useUser from 'hooks/useUser';
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+const CREATE_ROOM = gql`
+  mutation CreateRoom($name: String!, $callLink: String, $userId: ID!) {
+    createRoom(
+      roomData: { name: $name, callLink: $callLink, userId: $userId }
+    ) {
+      _id
+    }
+  }
+`;
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+const Home = () => {
+  const router = useRouter();
+  const { user, loading } = useUser();
+  const [createRoom, { data, error }] = useMutation(CREATE_ROOM);
+  const [form, setForm] = useState({
+    name: '',
+    callLink: '',
+  });
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+  useEffect(() => {
+    if (data?.createRoom) {
+      router.push(`/${data.createRoom._id}`);
+    }
+  }, [data]);
 
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}>
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+  if (loading) return <CircularProgress isIndeterminate />;
 
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}>
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+  return user ? (
+    <Container>
+      <Avatar name={user.name} src={user.picture} size="2xl" />
+      <Heading>Welcome {user.name}! Create a Game</Heading>
+      <Input
+        placeholder="Name"
+        value={form.name}
+        onChange={(e) => {
+          e.preventDefault();
+          setForm((prevState) => ({ ...prevState, name: e.target.value }));
+        }}
+      />
+      <Text>If you want, you can add a link to a call</Text>
+      <Input
+        placeholder="Call Link"
+        value={form.callLink}
+        onChange={(e) => {
+          e.preventDefault();
+          setForm((prevState) => ({ ...prevState, callLink: e.target.value }));
+        }}
+      />
+      <Button
+        onClick={() =>
+          createRoom({
+            variables: {
+              name: form.name,
+              callLink: form.callLink,
+              userId: user._id,
+            },
+          })
+        }>
+        Create
+      </Button>
+    </Container>
+  ) : (
+    <Container>
+      <Heading>Welcome</Heading>
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer">
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
+      <Button onClick={() => router.push('/api/login')}>Log in</Button>
+    </Container>
   );
-}
+};
+
+export default Home;

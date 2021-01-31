@@ -1,5 +1,3 @@
-import 'tailwindcss/tailwind.css';
-
 import {
   ApolloClient,
   ApolloProvider,
@@ -7,13 +5,19 @@ import {
   InMemoryCache,
 } from '@apollo/client';
 
+import { ChakraProvider } from '@chakra-ui/react';
 import { DefaultSeo } from 'next-seo';
 import Head from 'next/head';
 import React from 'react';
+import SocketProvider from 'context/SocketContext';
+import { UserProvider } from 'context/UserContext';
+import fetch from 'isomorphic-unfetch';
 
 const client = new ApolloClient({
-  ssrMode: typeof window === 'undefined',
-  link: new HttpLink({ uri: '/api/graphql' }),
+  link: new HttpLink({
+    uri: '/api/graphql',
+    fetch: fetch,
+  }),
   cache: new InMemoryCache(),
 });
 
@@ -26,17 +30,23 @@ const MyApp = ({ Component, pageProps }) => (
       />
     </Head>
     <ApolloProvider client={client}>
-      <DefaultSeo
-        title="CAH"
-        openGraph={{
-          url: 'CAH',
-          title: 'CAH',
-          description: 'CAH',
-          site_name: 'CAH',
-          type: 'website',
-        }}
-      />
-      <Component {...pageProps} />
+      <UserProvider>
+        <DefaultSeo
+          title="CAH"
+          openGraph={{
+            url: 'CAH',
+            title: 'CAH',
+            description: 'CAH',
+            site_name: 'CAH',
+            type: 'website',
+          }}
+        />
+        <ChakraProvider>
+          <SocketProvider>
+            <Component {...pageProps} />
+          </SocketProvider>
+        </ChakraProvider>
+      </UserProvider>
     </ApolloProvider>
   </>
 );

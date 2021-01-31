@@ -1,49 +1,42 @@
+import { BlackCard, Card } from './deck';
 import mongoose, { Document, Schema } from 'mongoose';
 
-import { IBlackCard } from './blackCard';
-import { ICard } from './card';
-import { IPlayer } from './player';
+import { Player } from './player';
+import { User } from './user';
 
-export interface IRoom extends Document {
+export interface Room extends Document {
   name: string;
   callLink?: string;
   game: {
-    mode: string;
     status: string;
-    players: number;
-    activeBlackCard: IBlackCard['_id'];
-    cards: Array<ICard['_id']>;
-    blackCards: Array<IBlackCard['_id']>;
+    activeBlackCard?: BlackCard;
+    cards: Array<Card>;
+    blackCards: Array<BlackCard>;
   };
-  players: Array<IPlayer['_id']>;
+  players: Array<Player['_id']>;
+  owner: User['_id'];
+  winners: Array<Player['_id']>;
 }
 
 const schema = new Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  callLink: {
-    type: String,
-  },
+  name: { type: String, required: true },
+  callLink: String,
   game: {
-    mode: {
-      type: String,
-      required: true,
-    },
-    status: {
-      type: String,
-      required: true,
-    },
+    status: { type: String, required: true },
     activeBlackCard: {
-      type: Schema.Types.ObjectId,
-      ref: 'BlackCard',
+      type: { id: String, description: String, cardsToDraw: Number },
+      required: false,
     },
-    cards: [{ type: Schema.Types.ObjectId, ref: 'Card' }],
-    blackCards: [{ type: Schema.Types.ObjectId, ref: 'BlackCard' }],
+    cards: [{ id: String, description: String }],
+    blackCards: [{ id: String, description: String, cardsToDraw: Number }],
   },
   players: [{ type: Schema.Types.ObjectId, ref: 'Player' }],
+  owner: { type: Schema.Types.ObjectId, ref: 'User' },
+  winners: {
+    type: [{ type: Schema.Types.ObjectId, ref: 'Player' }],
+    required: false,
+  },
 });
 
-export default (mongoose.models.Room as mongoose.Model<IRoom>) ||
-  mongoose.model<IRoom>('Room', schema);
+export default (mongoose.models.Room as mongoose.Model<Room>) ||
+  mongoose.model<Room>('Room', schema);

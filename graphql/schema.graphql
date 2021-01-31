@@ -1,21 +1,36 @@
 type Card {
-  _id: ID!
+  id: String!
   description: String!
-  language: String!
-  deck: String!
 }
 
 type BlackCard {
-  _id: ID!
+  id: String!
   description: String!
   cardsToDraw: Int!
+}
+
+type Deck {
+  _id: String!
+  name: String!
   language: String!
-  deck: String!
+  createdBy: User
+  public: Boolean!
+  cards: [Card!]
+  blackCards: [BlackCard!]
+}
+
+type User {
+  _id: ID!
+  nickname: String!
+  name: String!
+  picture: String!
+  email: String
+  sub: String!
 }
 
 type Player {
   _id: ID!
-  name: String!
+  user: User!
   cardCzar: Boolean!
   selectedCards: [Card!]
   cards: [Card!]
@@ -23,7 +38,6 @@ type Player {
 }
 
 type Game {
-  mode: String!
   status: String!
   activeBlackCard: BlackCard
   cards: [Card!]
@@ -36,30 +50,39 @@ type Room {
   callLink: String
   game: Game!
   players: [Player!]!
+  owner: User!
+  winners: [Player]
+}
+
+input UserData {
+  nickname: String!
+  name: String!
+  picture: String!
+  email: String
+  sub: String!
 }
 
 input RoomData {
   name: String!
   callLink: String
-  mode: String!
+  userId: ID!
 }
 
 type RootQuery {
+  user(id: ID!): User!
   player(id: ID!): Player!
   room(id: ID!): Room!
 }
 
 type RootMutation {
   createRoom(roomData: RoomData): Room!
-  createPlayer(roomId: ID, name: String): Player!
+  createPlayer(roomId: ID, userId: ID!): Player!
+  getOrCreateUser(userData: UserData!): User!
   startGame(roomId: ID!): Room!
   nextRound(roomId: ID!): Room!
-  updateSelectedCards(
-    roomId: ID!
-    playerId: ID!
-    selected: [ID!]!
-  ): Player!
-  updateWinner(roomId: ID!, playerId: ID!): Room!
+  updateSelectedCards(roomId: ID!, userId: ID!, selected: [String!]!): Player!
+  updateWinner(roomId: ID!, userId: ID!): Room!
+  endGame(roomId: ID!): Room!
 }
 
 schema {

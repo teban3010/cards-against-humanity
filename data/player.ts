@@ -1,30 +1,23 @@
+import { BlackCard, Card } from './deck';
 import mongoose, { Document, Schema } from 'mongoose';
 
-import { IBlackCard } from './blackCard';
-import { ICard } from './card';
+import { User } from './user';
 
-export interface IPlayer extends Document {
-  name: string;
+export interface Player extends Document {
+  user: User['_id'];
   cardCzar: boolean;
-  cards: Array<ICard['_id']>;
-  blackCards: Array<IBlackCard['_id']>;
-  selectedCards: Array<ICard['_id']>;
+  cards: Array<Card>;
+  blackCards: Array<BlackCard>;
+  selectedCards: Array<Card>;
 }
 
 const schema = new Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  cardCzar: {
-    type: Boolean,
-    required: true,
-    default: false,
-  },
-  cards: [{ type: Schema.Types.ObjectId, ref: 'Card' }],
-  blackCards: [{ type: Schema.Types.ObjectId, ref: 'BlackCard' }],
-  selectedCards: [{ type: Schema.Types.ObjectId, ref: 'Card' }],
+  user: { type: Schema.Types.ObjectId, ref: 'User' },
+  cardCzar: { type: Boolean, required: true, default: false },
+  cards: [{ id: String, description: String }],
+  blackCards: [{ id: String, description: String, cardsToDraw: Number }],
+  selectedCards: [{ id: String, description: String }],
 });
 
-export default (mongoose.models.Player as mongoose.Model<IPlayer>) ||
-  mongoose.model<IPlayer>('Player', schema);
+export default (mongoose.models.Player as mongoose.Model<Player>) ||
+  mongoose.model<Player>('Player', schema);

@@ -1,47 +1,31 @@
-import { Player as PlayerType, Resolvers, Room as RoomType } from './types';
-import Room, { IRoom } from 'data/room';
+import {
+  Player as PlayerType,
+  Resolvers,
+  Room as RoomType,
+  User as UserType,
+} from './types';
 
-import BlackCard from 'data/blackCard';
-import Card from 'data/card';
+import Deck from 'data/deck';
 import Player from 'data/player';
+import Room from 'data/room';
+import User from 'data/user';
 import { sendMessage } from 'services/socket';
 
 const shuffle = (array: Array<any>) => array.sort(() => Math.random() - 0.5);
 
 const getRoom = async (id) =>
-  await Room.findById(id)
-    .populate({
-      path: 'game.cards',
-      model: 'Card',
-    })
-    .populate({
-      path: 'game.blackCards',
-      model: 'BlackCard',
-    })
-    .populate({
-      path: 'game.activeBlackCard',
-      model: 'BlackCard',
-    })
-    .populate({
-      path: 'players',
-      model: 'Player',
-      populate: [
-        {
-          path: 'cards',
-          model: 'Card',
-        },
-        {
-          path: 'selectedCards',
-          model: 'Card',
-        },
-        {
-          path: 'blackCards',
-          model: 'BlackCard',
-        },
-      ],
-    });
+  await Room.findById(id).populate({
+    path: 'players',
+    model: 'Player',
+    populate: [
+      {
+        path: 'user',
+        model: 'User',
+      },
+    ],
+  });
 
-const updateRoom = async (room: IRoom) => {
+const updateRoom = async (room) => {
   for (const player of room.players) {
     await player.save();
   }
@@ -51,35 +35,48 @@ const updateRoom = async (room: IRoom) => {
 
 const resolvers: Resolvers = {
   RootQuery: {
+    user: async (_, { id }) => (await User.findById(id)) as UserType,
     player: async (_, { id }) =>
-      (await Player.findById(id)
-        .populate('cards')
-        .populate('blackCards')
-        .populate('selectedCards')) as PlayerType,
+      (await Player.findById(id).populate('user')) as PlayerType,
     room: async (_, { id }) => (await getRoom(id)) as RoomType,
   },
   RootMutation: {
     createRoom: async (_, { roomData }) => {
+      const deck = await Deck.findOne({ name: 'main', public: true });
+
       const room = new Room({
         name: roomData.name,
         callLink: roomData.callLink,
         game: {
-          mode: roomData.mode,
           status: 'New',
           players: 0,
-          cards: await Card.find(),
-          blackCards: await BlackCard.find(),
+          activeBlackCard: {},
+          cards: [...deck.cards],
+          blackCards: [...deck.blackCards],
         },
         players: [],
+        owner: await User.findById(roomData.userId),
       });
+
+      const player = new Player({
+        user: room.owner,
+        cardCzar: false,
+        cards: [],
+        blackCards: [],
+        selectedCards: [],
+      });
+
+      const createdPlayer = await player.save();
+
+      room.players.push(createdPlayer);
 
       return (await room.save()) as RoomType;
     },
-    createPlayer: async (_, { roomId, name }) => {
+    createPlayer: async (_, { roomId, userId }) => {
       const room = await getRoom(roomId);
 
       const player = new Player({
-        name: name,
+        user: await User.findById(userId),
         cardCzar: false,
         cards: [],
         blackCards: [],
@@ -92,9 +89,26 @@ const resolvers: Resolvers = {
 
       await room.save();
 
-      await sendMessage(`newPlayer_${roomId}`, { name });
+      await sendMessage(`newPlayer_${roomId}`, { player });
 
       return createdPlayer as PlayerType;
+    },
+    getOrCreateUser: async (_, { userData }) => {
+      let user = await User.findOne({ sub: userData.sub });
+
+      if (!user) {
+        user = new User({
+          nickname: userData.nickname,
+          name: userData.name,
+          picture: userData.picture,
+          email: userData.email,
+          sub: userData.sub,
+        });
+
+        await user.save();
+      }
+
+      return user as UserType;
     },
     startGame: async (_, { roomId }) => {
       const room = await getRoom(roomId);
@@ -113,7 +127,7 @@ const resolvers: Resolvers = {
       room.game.blackCards = blackCards;
       room.game.status = 'Playing';
 
-      await sendMessage(`startGame_${roomId}`, {});
+      await sendMessage(`startGame_${roomId}`, { id: roomId });
 
       return (await updateRoom(room)) as RoomType;
     },
@@ -127,7 +141,10 @@ const resolvers: Resolvers = {
 
       room.players.forEach((player) => {
         if (player.cards.length < 10) {
-          player.cards = cards.splice(0, 10 - player.cards.length);
+          player.cards = [
+            ...player.cards,
+            ...cards.splice(0, 10 - player.cards.length),
+          ];
         }
 
         player.selectedCards = [];
@@ -149,16 +166,16 @@ const resolvers: Resolvers = {
 
       return (await updateRoom(room)) as RoomType;
     },
-    updateSelectedCards: async (_, { roomId, playerId, selected }) => {
+    updateSelectedCards: async (_, { roomId, userId, selected }) => {
       const room = await getRoom(roomId);
 
-      const player = room.players.find((p) => p._id == playerId);
+      const player = room.players.find((p) => p.user._id == userId);
 
       const cards = [...player.cards];
       let selectedCards = [];
 
       selected.forEach((id) => {
-        const cardIndex = cards.findIndex((c) => c._id == id);
+        const cardIndex = cards.findIndex((c) => c.id == id);
         if (cardIndex > -1) {
           selectedCards = [...selectedCards, ...cards.splice(cardIndex, 1)];
         }
@@ -173,11 +190,11 @@ const resolvers: Resolvers = {
         playerId: player._id,
       });
 
-      return player;
+      return player as PlayerType;
     },
-    updateWinner: async (_, { roomId, playerId }) => {
+    updateWinner: async (_, { roomId, userId }) => {
       const room = await getRoom(roomId);
-      const player = room.players.find((p) => p._id == playerId);
+      const player = room.players.find((p) => p.user._id == userId);
 
       player.blackCards.push(room.game.activeBlackCard);
 
@@ -188,6 +205,30 @@ const resolvers: Resolvers = {
           blackCards: player.blackCards,
         },
       });
+
+      return (await updateRoom(room)) as RoomType;
+    },
+    endGame: async (_, { roomId }) => {
+      const room = await getRoom(roomId);
+      room.game.cards = [];
+      room.game.blackCards = [];
+      room.game.activeBlackCard = null;
+      room.game.status = 'Finished';
+
+      room.players.forEach((player) => {
+        player.cards = [];
+        player.cardCzar = false;
+      });
+
+      const maxBlackCards = Math.max(
+        ...room.players.map((p) => p.blackCards.length)
+      );
+
+      room.winners = room.players.filter(
+        (p) => p.blackCards.length === maxBlackCards
+      );
+
+      await sendMessage(`endGame_${roomId}`, {});
 
       return (await updateRoom(room)) as RoomType;
     },

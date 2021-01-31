@@ -1,0 +1,169 @@
+Write your query or mutation here
+mutation
+{
+  createRoom(roomData:{
+    name: "Test Room",
+    mode: "Test"
+  }){
+    _id,
+    name
+    callLink
+    players{
+    	cards {
+        _id
+        description
+      }
+      blackCards {
+        _id
+        description
+      }
+    }
+    game {
+      status
+      blackCards {
+        _id
+        description
+      }
+    }
+  }
+  createPlayer(roomId: "601435c83725f9246d006511" name:"Teban test 3") {
+    _id,
+    name,
+  }
+  startGame(roomId: "601435c83725f9246d006511") {
+    _id,
+    name
+    callLink
+    players{
+      _id,
+      name,
+      cardCzar,
+      selectedCards {
+        _id
+        description
+      }
+    	cards {
+        _id
+        description
+      }
+      blackCards {
+        _id
+        description
+        cardsToDraw
+      }
+    }
+    game {
+      status
+      activeBlackCard {
+        _id
+        description
+        cardsToDraw
+      }
+    }
+  }
+  updateSelectedCards(roomId: "601435c83725f9246d006511" playerId:"601436003725f9246d006514" selected:["60131425eb70ae0164ef9787", "60131418eb70ae0164ef973b"]){
+    _id,
+    name,
+    selectedCards {
+      _id
+      description
+    }
+    cards {
+      _id
+      description
+    }
+    blackCards {
+      _id
+      description
+      cardsToDraw
+    }
+  }
+  updateWinner(roomId: "601435c83725f9246d006511" playerId:"601436003725f9246d006514"){
+    _id,
+    name
+    callLink
+    players{
+      _id,
+      name,
+      cardCzar,
+      selectedCards {
+        _id
+        description
+      }
+      blackCards {
+        _id
+        description
+        cardsToDraw
+      }
+    }
+    game {
+      status
+      activeBlackCard {
+        _id
+        description
+        cardsToDraw
+      }
+    }
+  }
+  nextRound(roomId: "601435c83725f9246d006511"){
+    _id,
+    name
+    callLink
+    players{
+      _id,
+      name,
+      cardCzar,
+      selectedCards {
+        _id
+        description
+      }
+      blackCards {
+        _id
+        description
+        cardsToDraw
+      }
+    }
+    game {
+      status
+      activeBlackCard {
+        _id
+        description
+        cardsToDraw
+      }
+    }
+  }
+}
+
+{
+  room(id: "60141cdb3725f9246d0064aa") {
+    _id,
+    name
+    callLink
+    players{
+      _id,
+      name,
+      cardCzar,
+      selectedCards {
+        _id
+        description
+      }
+    	cards {
+        _id
+        description
+      }
+      blackCards {
+        _id
+        description
+        cardsToDraw
+      }
+    }
+    game {
+      status
+      activeBlackCard {
+        _id
+        description
+        cardsToDraw
+      }
+    }
+  }
+}

@@ -22,23 +22,38 @@ export type Scalars = {
 };
 
 export type Card = {
-  _id: Scalars['ID'];
+  id: Scalars['String'];
   description: Scalars['String'];
-  language: Scalars['String'];
-  deck: Scalars['String'];
 };
 
 export type BlackCard = {
-  _id: Scalars['ID'];
+  id: Scalars['String'];
   description: Scalars['String'];
   cardsToDraw: Scalars['Int'];
+};
+
+export type Deck = {
+  _id: Scalars['String'];
+  name: Scalars['String'];
   language: Scalars['String'];
-  deck: Scalars['String'];
+  createdBy?: Maybe<User>;
+  public: Scalars['Boolean'];
+  cards?: Maybe<Array<Card>>;
+  blackCards?: Maybe<Array<BlackCard>>;
+};
+
+export type User = {
+  _id: Scalars['ID'];
+  nickname: Scalars['String'];
+  name: Scalars['String'];
+  picture: Scalars['String'];
+  email?: Maybe<Scalars['String']>;
+  sub: Scalars['String'];
 };
 
 export type Player = {
   _id: Scalars['ID'];
-  name: Scalars['String'];
+  user: User;
   cardCzar: Scalars['Boolean'];
   selectedCards?: Maybe<Array<Card>>;
   cards?: Maybe<Array<Card>>;
@@ -46,7 +61,6 @@ export type Player = {
 };
 
 export type Game = {
-  mode: Scalars['String'];
   status: Scalars['String'];
   activeBlackCard?: Maybe<BlackCard>;
   cards?: Maybe<Array<Card>>;
@@ -59,17 +73,32 @@ export type Room = {
   callLink?: Maybe<Scalars['String']>;
   game: Game;
   players: Array<Player>;
+  owner: User;
+  winners?: Maybe<Array<Maybe<Player>>>;
+};
+
+export type UserData = {
+  nickname: Scalars['String'];
+  name: Scalars['String'];
+  picture: Scalars['String'];
+  email?: Maybe<Scalars['String']>;
+  sub: Scalars['String'];
 };
 
 export type RoomData = {
   name: Scalars['String'];
   callLink?: Maybe<Scalars['String']>;
-  mode: Scalars['String'];
+  userId: Scalars['ID'];
 };
 
 export type RootQuery = {
+  user: User;
   player: Player;
   room: Room;
+};
+
+export type RootQueryUserArgs = {
+  id: Scalars['ID'];
 };
 
 export type RootQueryPlayerArgs = {
@@ -83,10 +112,12 @@ export type RootQueryRoomArgs = {
 export type RootMutation = {
   createRoom: Room;
   createPlayer: Player;
+  getOrCreateUser: User;
   startGame: Room;
   nextRound: Room;
   updateSelectedCards: Player;
   updateWinner: Room;
+  endGame: Room;
 };
 
 export type RootMutationCreateRoomArgs = {
@@ -95,7 +126,11 @@ export type RootMutationCreateRoomArgs = {
 
 export type RootMutationCreatePlayerArgs = {
   roomId?: Maybe<Scalars['ID']>;
-  name?: Maybe<Scalars['String']>;
+  userId: Scalars['ID'];
+};
+
+export type RootMutationGetOrCreateUserArgs = {
+  userData: UserData;
 };
 
 export type RootMutationStartGameArgs = {
@@ -108,13 +143,17 @@ export type RootMutationNextRoundArgs = {
 
 export type RootMutationUpdateSelectedCardsArgs = {
   roomId: Scalars['ID'];
-  playerId: Scalars['ID'];
-  selected: Array<Scalars['ID']>;
+  userId: Scalars['ID'];
+  selected: Array<Scalars['String']>;
 };
 
 export type RootMutationUpdateWinnerArgs = {
   roomId: Scalars['ID'];
-  playerId: Scalars['ID'];
+  userId: Scalars['ID'];
+};
+
+export type RootMutationEndGameArgs = {
+  roomId: Scalars['ID'];
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -234,14 +273,17 @@ export type DirectiveResolverFn<
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Card: ResolverTypeWrapper<Card>;
-  ID: ResolverTypeWrapper<Scalars['ID']>;
   String: ResolverTypeWrapper<Scalars['String']>;
   BlackCard: ResolverTypeWrapper<BlackCard>;
   Int: ResolverTypeWrapper<Scalars['Int']>;
-  Player: ResolverTypeWrapper<Player>;
+  Deck: ResolverTypeWrapper<Deck>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
+  User: ResolverTypeWrapper<User>;
+  ID: ResolverTypeWrapper<Scalars['ID']>;
+  Player: ResolverTypeWrapper<Player>;
   Game: ResolverTypeWrapper<Game>;
   Room: ResolverTypeWrapper<Room>;
+  UserData: UserData;
   RoomData: RoomData;
   RootQuery: ResolverTypeWrapper<{}>;
   RootMutation: ResolverTypeWrapper<{}>;
@@ -250,14 +292,17 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Card: Card;
-  ID: Scalars['ID'];
   String: Scalars['String'];
   BlackCard: BlackCard;
   Int: Scalars['Int'];
-  Player: Player;
+  Deck: Deck;
   Boolean: Scalars['Boolean'];
+  User: User;
+  ID: Scalars['ID'];
+  Player: Player;
   Game: Game;
   Room: Room;
+  UserData: UserData;
   RoomData: RoomData;
   RootQuery: {};
   RootMutation: {};
@@ -267,10 +312,8 @@ export type CardResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['Card'] = ResolversParentTypes['Card']
 > = {
-  _id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   description?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  language?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  deck?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -278,11 +321,44 @@ export type BlackCardResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['BlackCard'] = ResolversParentTypes['BlackCard']
 > = {
-  _id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   description?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   cardsToDraw?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type DeckResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['Deck'] = ResolversParentTypes['Deck']
+> = {
+  _id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   language?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  deck?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdBy?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  public?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  cards?: Resolver<
+    Maybe<Array<ResolversTypes['Card']>>,
+    ParentType,
+    ContextType
+  >;
+  blackCards?: Resolver<
+    Maybe<Array<ResolversTypes['BlackCard']>>,
+    ParentType,
+    ContextType
+  >;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type UserResolvers<
+  ContextType = any,
+  ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']
+> = {
+  _id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  nickname?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  picture?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  sub?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -291,7 +367,7 @@ export type PlayerResolvers<
   ParentType extends ResolversParentTypes['Player'] = ResolversParentTypes['Player']
 > = {
   _id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  user?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   cardCzar?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   selectedCards?: Resolver<
     Maybe<Array<ResolversTypes['Card']>>,
@@ -315,7 +391,6 @@ export type GameResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['Game'] = ResolversParentTypes['Game']
 > = {
-  mode?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   status?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   activeBlackCard?: Resolver<
     Maybe<ResolversTypes['BlackCard']>,
@@ -344,6 +419,12 @@ export type RoomResolvers<
   callLink?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   game?: Resolver<ResolversTypes['Game'], ParentType, ContextType>;
   players?: Resolver<Array<ResolversTypes['Player']>, ParentType, ContextType>;
+  owner?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
+  winners?: Resolver<
+    Maybe<Array<Maybe<ResolversTypes['Player']>>>,
+    ParentType,
+    ContextType
+  >;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -351,6 +432,12 @@ export type RootQueryResolvers<
   ContextType = any,
   ParentType extends ResolversParentTypes['RootQuery'] = ResolversParentTypes['RootQuery']
 > = {
+  user?: Resolver<
+    ResolversTypes['User'],
+    ParentType,
+    ContextType,
+    RequireFields<RootQueryUserArgs, 'id'>
+  >;
   player?: Resolver<
     ResolversTypes['Player'],
     ParentType,
@@ -379,7 +466,13 @@ export type RootMutationResolvers<
     ResolversTypes['Player'],
     ParentType,
     ContextType,
-    RequireFields<RootMutationCreatePlayerArgs, never>
+    RequireFields<RootMutationCreatePlayerArgs, 'userId'>
+  >;
+  getOrCreateUser?: Resolver<
+    ResolversTypes['User'],
+    ParentType,
+    ContextType,
+    RequireFields<RootMutationGetOrCreateUserArgs, 'userData'>
   >;
   startGame?: Resolver<
     ResolversTypes['Room'],
@@ -399,20 +492,28 @@ export type RootMutationResolvers<
     ContextType,
     RequireFields<
       RootMutationUpdateSelectedCardsArgs,
-      'roomId' | 'playerId' | 'selected'
+      'roomId' | 'userId' | 'selected'
     >
   >;
   updateWinner?: Resolver<
     ResolversTypes['Room'],
     ParentType,
     ContextType,
-    RequireFields<RootMutationUpdateWinnerArgs, 'roomId' | 'playerId'>
+    RequireFields<RootMutationUpdateWinnerArgs, 'roomId' | 'userId'>
+  >;
+  endGame?: Resolver<
+    ResolversTypes['Room'],
+    ParentType,
+    ContextType,
+    RequireFields<RootMutationEndGameArgs, 'roomId'>
   >;
 };
 
 export type Resolvers<ContextType = any> = {
   Card?: CardResolvers<ContextType>;
   BlackCard?: BlackCardResolvers<ContextType>;
+  Deck?: DeckResolvers<ContextType>;
+  User?: UserResolvers<ContextType>;
   Player?: PlayerResolvers<ContextType>;
   Game?: GameResolvers<ContextType>;
   Room?: RoomResolvers<ContextType>;
