@@ -211,7 +211,10 @@ const PlayingGame: React.FC<PlayingGameProps> = ({
           {isCzar && showCards && !roundComplete && (
             <Button
               disabled={!roundWinner}
-              onClick={() => updateWinner(room._id, roundWinner.user._id)}>
+              onClick={() => {
+                updateWinner(room._id, roundWinner.user._id);
+                setRoundWinner(undefined);
+              }}>
               Accept Round Winner
             </Button>
           )}
