@@ -66,7 +66,6 @@ export interface RoomQuery extends QueryResult {
 export const useRoom = (id): RoomQuery => {
   const { data, ...queryResult } = useQuery(GET_ROOM, {
     variables: { id },
-    fetchPolicy: 'no-cache',
   });
 
   return { ...queryResult, data: data?.room };

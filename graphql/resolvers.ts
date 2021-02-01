@@ -139,9 +139,11 @@ const resolvers: Resolvers = {
       room.game.blackCards = blackCards;
       room.game.status = 'Playing';
 
+      const updatedRoom = await updateRoom(room);
+
       await sendMessage(`startGame_${roomId}`, { id: roomId });
 
-      return (await updateRoom(room)) as RoomType;
+      return updatedRoom as RoomType;
     },
     nextRound: async (_, { roomId }) => {
       const room = await getRoom(roomId);
@@ -174,9 +176,11 @@ const resolvers: Resolvers = {
       room.game.activeBlackCard = blackCards.splice(0, 1)[0];
       room.game.blackCards = blackCards;
 
+      const updatedRoom = await updateRoom(room);
+
       await sendMessage(`nextRound_${roomId}`, {});
 
-      return (await updateRoom(room)) as RoomType;
+      return updatedRoom as RoomType;
     },
     updateSelectedCards: async (_, { roomId, userId, selected }) => {
       const room = await getRoom(roomId);
@@ -210,6 +214,8 @@ const resolvers: Resolvers = {
 
       player.blackCards.push(room.game.activeBlackCard);
 
+      const updatedRoom = await updateRoom(room);
+
       await sendMessage(`winner_${roomId}`, {
         player: {
           _id: player._id,
@@ -218,7 +224,7 @@ const resolvers: Resolvers = {
         },
       });
 
-      return (await updateRoom(room)) as RoomType;
+      return updatedRoom as RoomType;
     },
     endGame: async (_, { roomId }) => {
       const room = await getRoom(roomId);
@@ -240,9 +246,11 @@ const resolvers: Resolvers = {
         (p) => p.blackCards.length === maxBlackCards
       );
 
+      const updatedRoom = (await updateRoom(room)) as RoomType;
+
       await sendMessage(`endGame_${roomId}`, {});
 
-      return (await updateRoom(room)) as RoomType;
+      return updatedRoom;
     },
   },
 };
