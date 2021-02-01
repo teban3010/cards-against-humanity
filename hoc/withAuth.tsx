@@ -10,7 +10,7 @@ export default (Component) => {
       return <RedirectToLogin />;
     }
 
-    return <div>{<Component {...props} user={props.user} />}</div>;
+    return <Component {...props} user={props.user} />;
   };
 
   withAuth.getInitialProps = async (ctx) => {

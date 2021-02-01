@@ -1,6 +1,7 @@
-import { Box, Image, Stack, Text } from '@chakra-ui/react';
+import { Box, Stack, Text } from '@chakra-ui/react';
 
 import { Card } from 'graphql/types';
+import Logo from '../Logo';
 import React from 'react';
 
 export interface WhiteCardProps {
@@ -48,13 +49,7 @@ const WhiteCard: React.FC<WhiteCardProps> = ({
     <Text fontSize={card.description.length > 60 ? 'xl' : '2xl'}>
       {card.description}
     </Text>
-    <Image
-      src="/android-icon-192x192.png"
-      position="absolute"
-      bottom={4}
-      left={4}
-      width={10}
-    />
+    <Logo position="absolute" bottom={4} left={4} maxW={10} />
   </Box>
 );
 

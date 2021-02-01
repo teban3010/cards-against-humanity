@@ -2,6 +2,7 @@ import React, { ReactElement, useEffect } from 'react';
 import { gql, useMutation } from '@apollo/client';
 
 import fetch from 'isomorphic-unfetch';
+import { useGetOrCreateUser } from 'hooks/useGraph';
 import { useState } from 'react';
 
 export interface UserProfile {
@@ -37,40 +38,13 @@ export const fetchUser = async (): Promise<UserProfile> => {
 
 type UserProviderProps = { children: React.ReactNode };
 
-const GET_OR_CREATE_USER = gql`
-  mutation GetOrCreateUser(
-    $nickname: String!
-    $name: String!
-    $picture: String!
-    $email: String
-    $sub: String!
-  ) {
-    getOrCreateUser(
-      userData: {
-        nickname: $nickname
-        name: $name
-        picture: $picture
-        email: $email
-        sub: $sub
-      }
-    ) {
-      _id
-      nickname
-      name
-      picture
-      email
-      sub
-    }
-  }
-`;
-
 export const UserProvider = ({
   children,
 }: UserProviderProps): ReactElement<UserContext> => {
   const [user, setUser] = useState(userState || null);
   const [loading, setLoading] = useState(userState === undefined);
 
-  const [getOrCreateUser, { data }] = useMutation(GET_OR_CREATE_USER);
+  const [getOrCreateUser, { data, error }] = useGetOrCreateUser();
 
   useEffect(() => {
     if (userState !== undefined) {
@@ -93,15 +67,13 @@ export const UserProvider = ({
 
   useEffect(() => {
     if (user) {
-      getOrCreateUser({
-        variables: {
-          nickname: user.nickname,
-          name: user.name,
-          picture: user.picture,
-          email: user.email,
-          sub: user.sub,
-        },
-      });
+      getOrCreateUser(
+        user.sub,
+        user.nickname,
+        user.name,
+        user.picture,
+        user.email
+      );
     }
 
     setLoading(false);

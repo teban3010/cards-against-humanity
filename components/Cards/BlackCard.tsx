@@ -1,10 +1,10 @@
-import { Box, HStack, Image, Stack, Text, VStack } from '@chakra-ui/react';
+import { Box, HStack, Stack, Text, VStack } from '@chakra-ui/react';
 
+import Logo from '../Logo';
 import React from 'react';
 
 const BlackCard = ({ card }) => (
   <VStack
-    m={4}
     p={4}
     width="250px"
     height="250px"
@@ -41,13 +41,7 @@ const BlackCard = ({ card }) => (
         </Stack>
       </HStack>
     )}
-    <Image
-      src="/android-icon-192x192.png"
-      position="absolute"
-      bottom={4}
-      left={4}
-      width={10}
-    />
+    <Logo position="absolute" bottom={4} left={4} maxW={10} />
   </VStack>
 );
 

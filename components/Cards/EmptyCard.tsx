@@ -1,7 +1,6 @@
-import { Box, Image, Stack, Text } from '@chakra-ui/react';
-
-import { Card } from 'graphql/types';
+import Logo from '../Logo';
 import React from 'react';
+import { Stack } from '@chakra-ui/react';
 
 const EmptyCard = () => (
   <Stack
@@ -12,9 +11,10 @@ const EmptyCard = () => (
     shadow="md"
     borderWidth="1px"
     borderRadius="md"
+    bgColor="white"
     justify="center"
     align="center">
-    <Image src="/android-icon-192x192.png" width={20} />
+    <Logo maxW={20} />
   </Stack>
 );
 

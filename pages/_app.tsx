@@ -4,10 +4,11 @@ import {
   HttpLink,
   InMemoryCache,
 } from '@apollo/client';
+import { ChakraProvider, Container } from '@chakra-ui/react';
 
-import { ChakraProvider } from '@chakra-ui/react';
 import { DefaultSeo } from 'next-seo';
 import Head from 'next/head';
+import Layout from 'components/Layout';
 import React from 'react';
 import SocketProvider from 'context/SocketContext';
 import { UserProvider } from 'context/UserContext';
@@ -43,7 +44,9 @@ const MyApp = ({ Component, pageProps }) => (
         />
         <ChakraProvider>
           <SocketProvider>
-            <Component {...pageProps} />
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
           </SocketProvider>
         </ChakraProvider>
       </UserProvider>

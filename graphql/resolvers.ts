@@ -14,16 +14,28 @@ import { sendMessage } from 'services/socket';
 const shuffle = (array: Array<any>) => array.sort(() => Math.random() - 0.5);
 
 const getRoom = async (id) =>
-  await Room.findById(id).populate({
-    path: 'players',
-    model: 'Player',
-    populate: [
-      {
-        path: 'user',
-        model: 'User',
-      },
-    ],
-  });
+  await Room.findById(id)
+    .populate({
+      path: 'players',
+      model: 'Player',
+      populate: [
+        {
+          path: 'user',
+          model: 'User',
+        },
+      ],
+    })
+    .populate({
+      path: 'winners',
+      model: 'Player',
+      populate: [
+        {
+          path: 'user',
+          model: 'User',
+        },
+      ],
+    })
+    .populate('owner');
 
 const updateRoom = async (room) => {
   for (const player of room.players) {
