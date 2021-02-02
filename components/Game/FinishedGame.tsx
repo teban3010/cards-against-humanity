@@ -12,7 +12,7 @@ export interface FinishedGameProps {
 
 const FinishedGame: React.FC<FinishedGameProps> = ({ room }) => {
   const router = useRouter();
-  console.log(room);
+
   return (
     <Center h="100%">
       <Card>

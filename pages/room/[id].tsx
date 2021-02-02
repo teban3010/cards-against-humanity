@@ -26,7 +26,6 @@ const Room = () => {
 
     subscribe(`newPlayer_${router.query.id}`, refetchRoom);
     subscribe(`startGame_${router.query.id}`, refetchRoom);
-    subscribe(`nextRound_${router.query.id}`, refetchRoom);
     subscribe(`winner_${router.query.id}`, refetchRoom);
 
     return () => {
@@ -36,7 +35,6 @@ const Room = () => {
 
       unSubscribe(`newPlayer_${router.query.id}`, refetchRoom);
       unSubscribe(`startGame_${router.query.id}`, refetchRoom);
-      unSubscribe(`nextRound_${router.query.id}`, refetchRoom);
       unSubscribe(`winner_${router.query.id}`, refetchRoom);
     };
   }, [subscribe, unSubscribe, router]);
