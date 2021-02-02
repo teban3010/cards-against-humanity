@@ -55,9 +55,11 @@ const PlayingGame: React.FC<PlayingGameProps> = ({
     };
 
     subscribe(`updateSelectedCards_${room._id}`, refetchPlayer);
+    subscribe(`nextRound_${room._id}`, refetchPlayer);
 
     return () => {
       unSubscribe(`updateSelectedCards_${room._id}`, refetchPlayer);
+      unSubscribe(`nextRound_${room._id}`, refetchRoom);
     };
   }, [subscribe, unSubscribe, room]);
 
@@ -77,7 +79,9 @@ const PlayingGame: React.FC<PlayingGameProps> = ({
         room.players.length - 1
     );
 
-    setIsCzar(room.players.some((p) => p.cardCzar && p.user?._id === user?._id));
+    setIsCzar(
+      room.players.some((p) => p.cardCzar && p.user?._id === user?._id)
+    );
     setCzar(room.players.find((p) => p.cardCzar));
     setRoundComplete(
       room.players.some((p) =>
