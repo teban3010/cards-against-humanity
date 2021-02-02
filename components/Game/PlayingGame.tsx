@@ -44,7 +44,7 @@ const PlayingGame: React.FC<PlayingGameProps> = ({
   const [nextRound] = useNextRound();
   const [endGame] = useEndGame();
   const { data: player, refetch } = usePlayer(
-    room.players.find((p) => p.user._id === user?._id)?._id
+    room.players.find((p) => p.user?._id === user?._id)?._id
   );
   const { subscribe, unSubscribe } = useContext(SocketContext);
 
@@ -77,7 +77,7 @@ const PlayingGame: React.FC<PlayingGameProps> = ({
         room.players.length - 1
     );
 
-    setIsCzar(room.players.some((p) => p.cardCzar && p.user._id === user._id));
+    setIsCzar(room.players.some((p) => p.cardCzar && p.user?._id === user?._id));
     setCzar(room.players.find((p) => p.cardCzar));
     setRoundComplete(
       room.players.some((p) =>
@@ -128,7 +128,7 @@ const PlayingGame: React.FC<PlayingGameProps> = ({
   const showPlayerCards = (p: Player) =>
     (showCards &&
       ((isCzar && revealedPlayers.some((rp) => rp._id === p._id)) ||
-        (!isCzar && p.user._id === user._id))) ||
+        (!isCzar && p.user?._id === user?._id))) ||
     roundComplete;
 
   const playerSelectedStyles = {
@@ -212,7 +212,7 @@ const PlayingGame: React.FC<PlayingGameProps> = ({
             <Button
               disabled={!roundWinner}
               onClick={() => {
-                updateWinner(room._id, roundWinner.user._id);
+                updateWinner(room._id, roundWinner.user?._id);
                 setRoundWinner(undefined);
               }}>
               Accept Round Winner
@@ -240,7 +240,7 @@ const PlayingGame: React.FC<PlayingGameProps> = ({
               onClick={() => {
                 updateSelectedCards(
                   room._id,
-                  user._id,
+                  user?._id,
                   selectedCards.map((sc) => sc.id)
                 );
                 setSelectedCards([]);
