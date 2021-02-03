@@ -1,7 +1,7 @@
 import { Box, Stack, Text } from '@chakra-ui/react';
 
 import { Card } from 'graphql/types';
-import Logo from '../Logo';
+import Logo from '../common/Logo';
 import React from 'react';
 
 export interface WhiteCardProps {
@@ -25,8 +25,8 @@ const WhiteCard: React.FC<WhiteCardProps> = ({
     shadow="md"
     borderWidth={selected ? '2px' : '1px'}
     borderColor={selected ? 'blue.500' : '#E2E8F0'}
-    borderRadius="md"
     bgColor={selected ? 'blue.100' : 'white'}
+    borderRadius="md"
     position="relative"
     cursor={!!onSelected ? 'pointer' : 'cursor'}
     onClick={onSelected}>

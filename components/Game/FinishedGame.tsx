@@ -1,24 +1,21 @@
-import { Avatar, Center, HStack, Heading, Text } from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
+import { Center, Heading, Text } from '@chakra-ui/react';
 
-import Button from 'components/UI/Button';
-import Card from 'components/UI/Card';
+import Button from 'components/common/Button';
+import Card from 'components/common/Card';
+import PlayerItem from 'components/Player/PlayerItem';
+import React from 'react';
 import { Room } from 'graphql/types';
 import { useRouter } from 'next/router';
 
-export interface FinishedGameProps {
-  room: Room;
-}
-
-const FinishedGame: React.FC<FinishedGameProps> = ({ room }) => {
+const FinishedGame: React.FC<{ room: Room }> = ({ room }) => {
   const router = useRouter();
 
   return (
     <Center h="100%">
       <Card>
-        <HStack justify="space-between" align="center">
+        <Center h="100%">
           <Heading>{room.name}</Heading>
-        </HStack>
+        </Center>
 
         {room.winners.length === 1 ? (
           <Text>The winner is</Text>
@@ -27,10 +24,7 @@ const FinishedGame: React.FC<FinishedGameProps> = ({ room }) => {
         )}
 
         {room.winners.map((p) => (
-          <HStack key={p._id} p={1}>
-            <Avatar name={p.user.nickname} src={p.user.picture} />
-            <Text>{p.user.nickname}</Text>
-          </HStack>
+          <PlayerItem key={p._id} player={p} />
         ))}
 
         <Button onClick={() => router.push('/')}>Back Home</Button>

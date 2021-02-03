@@ -1,95 +1,84 @@
-import {
-  Avatar,
-  AvatarGroup,
-  Box,
-  Center,
-  Container,
-  HStack,
-  Stack,
-  VStack,
-} from '@chakra-ui/react';
 import { Card, Player, Room } from 'graphql/types';
-import React, { useContext, useEffect, useState } from 'react';
-import {
-  useEndGame,
-  useNextRound,
-  usePlayer,
-  useUpdateSelectedCards,
-  useUpdateWinner,
-} from 'hooks/useGraph';
+import { Center, Container, HStack, Stack, VStack } from '@chakra-ui/react';
+import React, { useEffect, useReducer } from 'react';
+import { useEndGame, usePlayer, useUpdateSelectedCards } from 'hooks/useGraph';
 
 import BlackCard from 'components/Cards/BlackCard';
-import Button from 'components/UI/Button';
-import EmptyCard from '../Cards/EmptyCard';
-import H1 from 'components/UI/H1';
-import H3 from 'components/UI/H3';
-import PlayerAvatar from 'components/PlayerAvatar';
-import { SocketContext } from 'context/SocketContext';
+import Button from 'components/common/Button';
+import H1 from 'components/common/H1';
+import H3 from 'components/common/H3';
+import PlayerAvatar from 'components/Player/PlayerAvatar';
+import PlayerGroup from 'components/Player/PlayerGroup';
+import PlayerSelectedCardList from 'components/Cards/PlayerSelectedCardList';
+import SelectedCardList from 'components/Cards/SelectedCardList';
 import { UserProfile } from 'context/UserContext';
-import WhiteCard from 'components/Cards/WhiteCard';
+import WhiteCardList from 'components/Cards/WhiteCardList';
 
-export interface PlayingGameProps {
-  room: Room;
-  user: UserProfile;
-  refetchRoom: Function;
-}
+type State = {
+  selectedCards: Array<Card>;
+  isOwner: boolean;
+  isCzar: boolean;
+  czar: Player;
+};
 
-const PlayingGame: React.FC<PlayingGameProps> = ({
+type Action =
+  | {
+      type: 'SET_ROOM_STATE';
+      isOwner: boolean;
+      isCzar: boolean;
+      czar: Player;
+    }
+  | { type: 'SET_SELECTED_CARDS'; selectedCards: Array<Card> };
+
+const initialState: State = {
+  selectedCards: [],
+  isOwner: false,
+  isCzar: false,
+  czar: undefined,
+};
+
+const SET_ROOM_STATE = 'SET_ROOM_STATE';
+const SET_SELECTED_CARDS = 'SET_SELECTED_CARDS';
+
+const reducer = (state: State, action: Action) => {
+  switch (action.type) {
+    case SET_ROOM_STATE:
+      return {
+        ...state,
+        isOwner: action.isOwner,
+        isCzar: action.isCzar,
+        czar: action.czar,
+      };
+    case SET_SELECTED_CARDS:
+      return { ...state, selectedCards: action.selectedCards };
+    default:
+      return state;
+  }
+};
+
+const PlayingGame: React.FC<{ room: Room; user: UserProfile }> = ({
   room,
   user,
-  refetchRoom,
 }) => {
   const [updateSelectedCards] = useUpdateSelectedCards();
-  const [updateWinner] = useUpdateWinner();
-  const [nextRound] = useNextRound();
   const [endGame] = useEndGame();
-  const { data: player, refetch } = usePlayer(
+  const { data: player } = usePlayer(
+    room._id,
     room.players.find((p) => p.user?._id === user?._id)?._id
   );
-  const { subscribe, unSubscribe } = useContext(SocketContext);
+
+  const [{ selectedCards, isOwner, isCzar, czar }, dispatch] = useReducer(
+    reducer,
+    initialState
+  );
 
   useEffect(() => {
-    const refetchPlayer = () => {
-      refetch();
-      refetchRoom();
-    };
-
-    subscribe(`updateSelectedCards_${room._id}`, refetchPlayer);
-    subscribe(`nextRound_${room._id}`, refetchPlayer);
-
-    return () => {
-      unSubscribe(`updateSelectedCards_${room._id}`, refetchPlayer);
-      unSubscribe(`nextRound_${room._id}`, refetchRoom);
-    };
-  }, [subscribe, unSubscribe, room]);
-
-  const [showCards, setShowCards] = useState(false);
-  const [isCzar, setIsCzar] = useState(false);
-  const [czar, setCzar] = useState<Player | undefined>();
-  const [roundComplete, setRoundComplete] = useState(false);
-  const [selectedCards, setSelectedCards] = useState<Array<Card>>([]);
-  const [revealedPlayers, setRevealedPlayers] = useState<Array<Player>>([]);
-  const [isOwner, setIsOwner] = useState(false);
-
-  const [roundWinner, setRoundWinner] = useState<Player | undefined>();
-
-  useEffect(() => {
-    setShowCards(
-      room.players.filter((p) => p.selectedCards.length > 0).length ===
-        room.players.length - 1
-    );
-
-    setIsCzar(
-      room.players.some((p) => p.cardCzar && p.user?._id === user?._id)
-    );
-    setCzar(room.players.find((p) => p.cardCzar));
-    setRoundComplete(
-      room.players.some((p) =>
-        p.blackCards.some((bc) => bc.id === room.game.activeBlackCard.id)
-      )
-    );
-
-    setIsOwner(user?._id === room.owner._id);
+    dispatch({
+      type: SET_ROOM_STATE,
+      isCzar: room.players.some((p) => p.cardCzar && p.user?._id === user?._id),
+      czar: room.players.find((p) => p.cardCzar),
+      isOwner: user._id === room.owner._id,
+    });
   }, [room, user]);
 
   const onCardSelected = (card: Card) => {
@@ -98,48 +87,35 @@ const PlayingGame: React.FC<PlayingGameProps> = ({
     }
 
     if (selectedCards.some((c) => c.id === card.id)) {
-      setSelectedCards((prevState) => [
-        ...prevState.filter((c) => c.id !== card.id),
-      ]);
+      dispatch({
+        type: SET_SELECTED_CARDS,
+        selectedCards: [...selectedCards.filter((c) => c.id !== card.id)],
+      });
 
       return;
     }
 
     if (room.game.activeBlackCard.cardsToDraw !== selectedCards.length) {
-      setSelectedCards((prevState) => [...prevState, card]);
+      dispatch({
+        type: SET_SELECTED_CARDS,
+        selectedCards: [...selectedCards, card],
+      });
     } else {
-      setSelectedCards([card]);
+      dispatch({ type: SET_SELECTED_CARDS, selectedCards: [card] });
     }
   };
 
-  const onPlayerSelected = (p: Player) => {
-    if (!isCzar) {
-      return;
-    }
-
-    if (revealedPlayers.length !== room.players.length - 1) {
-      setRevealedPlayers((prevState) => [...prevState, p]);
-      return;
-    }
-
-    if (!roundWinner || roundWinner._id !== p._id) {
-      setRoundWinner(p);
-    } else {
-      setRoundWinner(undefined);
-    }
+  const onAcceptSelectedCards = () => {
+    updateSelectedCards(
+      room._id,
+      user?._id,
+      selectedCards.map((sc) => sc.id)
+    );
+    dispatch({ type: SET_SELECTED_CARDS, selectedCards: [] });
   };
 
-  const showPlayerCards = (p: Player) =>
-    (showCards &&
-      ((isCzar && revealedPlayers.some((rp) => rp._id === p._id)) ||
-        (!isCzar && p.user?._id === user?._id))) ||
-    roundComplete;
-
-  const playerSelectedStyles = {
-    borderWidth: '2px',
-    borderColor: 'blue.500',
-    borderRadius: 'md',
-    bgColor: 'blue.100',
+  const onEndGame = () => {
+    endGame(room._id);
   };
 
   return (
@@ -148,7 +124,7 @@ const PlayingGame: React.FC<PlayingGameProps> = ({
         <H1 color="white" m={0}>
           {room.name}
         </H1>
-        {isOwner && <Button onClick={() => endGame(room._id)}>End Game</Button>}
+        {isOwner && <Button onClick={onEndGame}>End Game</Button>}
       </HStack>
 
       <Center>
@@ -162,14 +138,7 @@ const PlayingGame: React.FC<PlayingGameProps> = ({
           <H3 color="white" marginBottom={1}>
             Players
           </H3>
-          <AvatarGroup size="md" max={3}>
-            {room.players
-              .filter((p) => !p.cardCzar)
-              .sort((a, b) => a.blackCards.length - b.blackCards.length)
-              .map((p) => (
-                <PlayerAvatar key={p._id} player={p} />
-              ))}
-          </AvatarGroup>
+          <PlayerGroup players={room.players} />
         </VStack>
       </Center>
 
@@ -187,110 +156,31 @@ const PlayingGame: React.FC<PlayingGameProps> = ({
         {room.game.activeBlackCard && (
           <BlackCard card={room.game.activeBlackCard} />
         )}
-        <VStack justify="center" overflowY="auto">
-          <HStack flex="1">
-            {room.players
-              .filter((p) => !p.cardCzar)
-              .map((p) => (
-                <VStack
-                  key={p._id}
-                  {...(isCzar ? { cursor: 'pointer' } : {})}
-                  {...(roundWinner && roundWinner._id === p._id
-                    ? playerSelectedStyles
-                    : {})}
-                  onClick={() => onPlayerSelected(p)}>
-                  {p.selectedCards.map((c) =>
-                    showPlayerCards(p) ? (
-                      <WhiteCard key={c.id} card={c} />
-                    ) : (
-                      <EmptyCard />
-                    )
-                  )}
-                  {roundComplete && (
-                    <Avatar name={p.user.name} src={p.user.picture} />
-                  )}
-                </VStack>
-              ))}
-          </HStack>
-          {isCzar && showCards && !roundComplete && (
-            <Button
-              disabled={!roundWinner}
-              onClick={() => {
-                updateWinner(room._id, roundWinner.user?._id);
-                setRoundWinner(undefined);
-              }}>
-              Accept Round Winner
-            </Button>
-          )}
-          {isCzar && showCards && roundComplete && (
-            <Button onClick={() => nextRound(room._id)}>Next Round</Button>
-          )}
-        </VStack>
+        <PlayerSelectedCardList
+          room={room}
+          isCzar={isCzar}
+          userId={user?._id}
+        />
       </Stack>
 
       {!isCzar && selectedCards.length > 0 && (
-        <HStack
-          wrap="wrap"
-          p={4}
-          borderWidth="1px"
-          borderRadius="md"
-          shadow="md">
-          <VStack justify="center" align="center" m={4} p={4}>
-            <H3 color="white">Selected cards</H3>
-            <Button
-              disabled={
-                room.game.activeBlackCard.cardsToDraw !== selectedCards.length
-              }
-              onClick={() => {
-                updateSelectedCards(
-                  room._id,
-                  user?._id,
-                  selectedCards.map((sc) => sc.id)
-                );
-                setSelectedCards([]);
-              }}>
-              Accept selection
-            </Button>
-          </VStack>
-          {selectedCards.map((c, idx) => (
-            <WhiteCard
-              key={c.id}
-              card={c}
-              selectedOrder={idx + 1}
-              onSelected={() => onCardSelected(c)}
-            />
-          ))}
-        </HStack>
+        <SelectedCardList
+          disabled={
+            room.game.activeBlackCard.cardsToDraw !== selectedCards.length
+          }
+          onAccept={onAcceptSelectedCards}
+          selectedCards={selectedCards}
+          onCardSelected={onCardSelected}
+        />
       )}
 
       {player && (
-        <Box position="relative" marginBlock={4}>
-          <HStack overflowY="auto" paddingBlock={4}>
-            {player.cards.map((c: Card) => (
-              <WhiteCard
-                key={c.id}
-                card={c}
-                selected={selectedCards.some((sc) => sc.id === c.id)}
-                onSelected={() => onCardSelected(c)}
-                selectedOrder={
-                  selectedCards.findIndex((sc) => sc.id === c.id) + 1
-                }
-              />
-            ))}
-          </HStack>
-          {(isCzar || player.selectedCards.length > 0) && (
-            <Box
-              position="absolute"
-              zchIndex={10}
-              w="100%"
-              h="100%"
-              bgColor="gray.500"
-              borderRadius="md"
-              opacity="0.2"
-              top={0}
-              left={0}></Box>
-          )}
-        </Box>
+        <WhiteCardList
+          cards={player.cards}
+          selectedCards={player.selectedCards}
+          isCzar={isCzar}
+          onCardSelected={onCardSelected}
+        />
       )}
     </Container>
   );

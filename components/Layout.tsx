@@ -1,20 +1,16 @@
 import {
   Avatar,
-  Box,
-  Circle,
   Container,
   HStack,
-  Image,
   Menu,
   MenuButton,
   MenuItem,
   MenuList,
-  Text,
 } from '@chakra-ui/react';
 import { GoPerson, GoSignIn, GoSignOut } from 'react-icons/go';
 
-import Logo from './Logo';
-import NextChakraLink from './UI/NextChakraLink';
+import Logo from './common/Logo';
+import NextChakraLink from './common/NextChakraLink';
 import React from 'react';
 import { useRouter } from 'next/router';
 import useUser from 'hooks/useUser';
@@ -28,7 +24,7 @@ const Layout: React.FC = ({ children }) => {
       bgColor="black"
       w="100vW"
       maxW="100vw"
-      h="100%"
+      h="100vh"
       minH="100vh"
       p={0}
       m={0}>
@@ -75,7 +71,13 @@ const Layout: React.FC = ({ children }) => {
           </MenuList>
         </Menu>
       </HStack>
-      <Container maxW="100%" w="100%" h="100%" p={4} paddingTop="64px">
+      <Container
+        maxW="100%"
+        w="100%"
+        h="100%"
+        p={4}
+        paddingTop="70px"
+        overflowX="auto">
         {children}
       </Container>
     </Container>

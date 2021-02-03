@@ -1,4 +1,3 @@
-import { Box, HStack } from '@chakra-ui/react';
 import { Formik, Form as FormikForm } from 'formik';
 import React, { useCallback, useMemo } from 'react';
 import {
@@ -7,7 +6,8 @@ import {
   formatValidations,
 } from 'lib/formUtils';
 
-import Button from './UI/Button';
+import Button from './Button';
+import { HStack } from '@chakra-ui/react';
 
 export interface FormProps {
   data?: any;

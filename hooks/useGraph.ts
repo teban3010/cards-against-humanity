@@ -1,5 +1,8 @@
 import { Player, Room } from 'graphql/types';
 import { QueryResult, gql, useMutation, useQuery } from '@apollo/client';
+import { useContext, useEffect } from 'react';
+
+import { SocketContext } from 'context/SocketContext';
 
 const GET_ROOM = gql`
   query Room($id: ID!) {
@@ -64,11 +67,34 @@ export interface RoomQuery extends QueryResult {
 }
 
 export const useRoom = (id): RoomQuery => {
-  const { data, ...queryResult } = useQuery(GET_ROOM, {
+  const { subscribe, unSubscribe } = useContext(SocketContext);
+  const { data, refetch, ...queryResult } = useQuery(GET_ROOM, {
     variables: { id },
   });
 
-  return { ...queryResult, data: data?.room };
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+
+    const refetchRoom = () => refetch();
+
+    subscribe(`newPlayer_${id}`, refetchRoom);
+    subscribe(`startGame_${id}`, refetchRoom);
+    subscribe(`winner_${id}`, refetchRoom);
+
+    return () => {
+      if (!id) {
+        return;
+      }
+
+      unSubscribe(`newPlayer_${id}`, refetchRoom);
+      unSubscribe(`startGame_${id}`, refetchRoom);
+      unSubscribe(`winner_${id}`, refetchRoom);
+    };
+  }, [subscribe, unSubscribe, id]);
+
+  return { ...queryResult, data: data?.room, refetch };
 };
 
 const GET_PLAYER = gql`
@@ -96,12 +122,33 @@ export interface PlayerQuery extends QueryResult {
   data: Player;
 }
 
-export const usePlayer = (id): PlayerQuery => {
-  const { data, ...queryResult } = useQuery(GET_PLAYER, {
+export const usePlayer = (roomId, id): PlayerQuery => {
+  const { subscribe, unSubscribe } = useContext(SocketContext);
+  const { data, refetch, ...queryResult } = useQuery(GET_PLAYER, {
     variables: { id },
   });
 
-  return { ...queryResult, data: data?.player };
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+
+    const refetchPlayer = () => refetch();
+
+    subscribe(`updateSelectedCards_${roomId}`, refetchPlayer);
+    subscribe(`nextRound_${roomId}`, refetchPlayer);
+
+    return () => {
+      if (!id) {
+        return;
+      }
+
+      unSubscribe(`updateSelectedCards_${roomId}`, refetchPlayer);
+      unSubscribe(`nextRound_${roomId}`, refetchPlayer);
+    };
+  }, [subscribe, unSubscribe, roomId]);
+
+  return { ...queryResult, data: data?.player, refetch };
 };
 
 const GET_OR_CREATE_USER = gql`

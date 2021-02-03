@@ -1,5 +1,5 @@
 import CreateGame from 'components/CreateGame';
-import Loading from 'components/Loading';
+import Loading from 'components/common/Loading';
 import Login from 'components/Login';
 import React from 'react';
 import useUser from 'hooks/useUser';

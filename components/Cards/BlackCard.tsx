@@ -1,6 +1,6 @@
 import { Box, HStack, Stack, Text, VStack } from '@chakra-ui/react';
 
-import Logo from '../Logo';
+import Logo from '../common/Logo';
 import React from 'react';
 
 const BlackCard = ({ card }) => (

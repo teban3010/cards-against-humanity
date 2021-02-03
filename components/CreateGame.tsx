@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo } from 'react';
 
-import Card from './UI/Card';
+import Card from './common/Card';
 import { Center } from '@chakra-ui/react';
-import Field from './Field';
-import Form from './Form';
+import Field from './common/Field';
+import Form from './common/Form';
 import { FormField } from 'lib/FormField';
-import H1 from './UI/H1';
-import H2 from './UI/H2';
-import Logo from './Logo';
+import H1 from './common/H1';
+import H2 from './common/H2';
+import Logo from './common/Logo';
 import { useCreateRoom } from 'hooks/useGraph';
 import { useRouter } from 'next/router';
 

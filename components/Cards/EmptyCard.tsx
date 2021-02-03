@@ -1,4 +1,4 @@
-import Logo from '../Logo';
+import Logo from '../common/Logo';
 import React from 'react';
 import { Stack } from '@chakra-ui/react';
 
